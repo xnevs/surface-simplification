@@ -7,6 +7,31 @@ import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 
+class EdgePriorityQueue:
+    def __init__(self):
+        self.tree = SortedDict()
+        self.errors = dict()
+
+    def push(self,error,e,c):
+        if e[1] < e[0]:
+            e = (e[1],e[0])
+        self.errors[e] = error
+        self.tree[(error,e)] = c
+
+    def pop(self):
+        (error,e),c = self.tree.popitem()
+        self.errors.pop(e)
+        return (e,c)
+
+    def discard(self,e):
+        if e[1] < e[0]:
+            e = (e[1],e[0])
+        try:
+            self.tree.pop((self.errors[e],e))
+            self.errors.pop(e)
+        except KeyError:
+            pass
+
 
 try:
     filename = sys.argv[1]
@@ -16,9 +41,6 @@ except:
     print("examples/cow.ply")
     fileName = input("Input file name: ").strip()
     count = int(input("Input contract length: ").strip())
-
-def n(*args):
-    return tuple(sorted(args))
 
 points = []
 triangles = []
@@ -69,9 +91,6 @@ def triangle_quadric(a,b,c):
 
 def point_quadric(points,graph,i):
     Q = np.zeros((4,4))
-    #for j,k in itertools.combinations(graph[i],2):
-    #    if k in graph[j]:
-    #        Q += triangle_quadric(points[i],points[j],points[k])
     for j in graph[i]:
         for k in (graph[i] & graph[j]):
             Q += triangle_quadric(points[i],points[j],points[k])
@@ -92,14 +111,13 @@ def edge_point(points,Qs,i,j):
     error = np.dot(np.dot(c,Q),c)
     return (-error,c[:-1])
 
-real_error = dict()
-pq = SortedDict()
+
+pq = EdgePriorityQueue()
 for i in range(len(points)):
     for j in graph[i]:
         if i < j:
             error,c = edge_point(points,Qs,i,j)
-            real_error[n(i,j)] = error
-            pq[(error,n(i,j))] = c
+            pq.push(error,(i,j),c)
 print('after pq initialization')
 
 def is_safe(graph,a,b):
@@ -107,17 +125,9 @@ def is_safe(graph,a,b):
 
 def contract(points,graph,Qs,pq,i,j,c):
     for k in graph[i]:
-        try:
-            pq.pop((real_error[n(i,k)],(n(i,k))))
-            real_error.pop(n(i,k))
-        except:
-            pass
+        pq.discard((i,k))
     for k in graph[j]:
-        try:
-            pq.pop((real_error[n(j,k)],(n(j,k))))
-            real_error.pop(n(j,k))
-        except:
-            pass
+        pq.discard((j,k))
     
     graph[i].remove(j)
     graph[i].update(graph[j])
@@ -134,16 +144,11 @@ def contract(points,graph,Qs,pq,i,j,c):
 
     for k in graph[i]:
         error,c = edge_point(points,Qs,i,k)
-        real_error[n(i,k)] = error;
-        pq[(error,n(i,k))] = c
+        pq.push(error,(i,k),c)
     
 
 while pq and count > 0:
-    print(len(pq))
-    print(len(real_error))
-    print()
-    (error,(i,j)),c = pq.popitem()
-    real_error.pop((i,j))
+    (i,j),c = pq.pop()
     if is_safe(graph,i,j):
         contract(points,graph,Qs,pq,i,j,c)
         count -= 1
