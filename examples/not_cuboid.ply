@@ -1,7 +1,7 @@
 ply
 format ascii 1.0
 comment Created by Blender 2.76 (sub 0) - www.blender.org, source file: 'not_cuboid.blend'
-element vertex 6
+element vertex 10
 property float x
 property float y
 property float z

@@ -3,19 +3,33 @@ from collections import defaultdict
 import itertools
 
 import numpy as np
+from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.pyplot as plt
 
 points = []
 triangles = []
 with open(sys.argv[1]) as f:
-    num_points = int(next(itertools.islice(f,3,4)).split()[2])
-    num_triangles = int(next(itertools.islice(f,6,7)).split()[2])
-    next(itertools.islice(f,2,2),None)
+    line = next(f).split()
+    while line[0] != 'element':
+        line = next(f).split()
+    num_points = int(line[2])
+    line = next(f).split()
+    while line[0] != 'element':
+        line = next(f).split()
+    num_triangles = int(line[2])
+    line = next(f).split()
+    while line[0] != 'end_header':
+        line = next(f).split()
     for i in range(num_points):
-        x,y,z,_,_,_ = map(float,next(f).split())
+        line = map(float,next(f).split())
+        x = next(line)
+        y = next(line)
+        z = next(line)
         points.append( np.array((x,y,z)) )
     for i in range(num_triangles):
         _,a,b,c = map(int,next(f).split())
         triangles.append((a,b,c))
+
 
 graph = [set() for _ in points]
 for (a,b,c) in triangles:
@@ -72,10 +86,9 @@ def contract(points,graph,Qs,pq,i,j,c):
     graph[i].remove(j)
     graph[i].update(graph[j] - {i})
     for k in graph[j]:
-            if k != i:
+        if k != i:
             graph[k].remove(j)
             graph[k].add(i)
-    
     graph[j] = None
 
     points[i] = c
@@ -90,11 +103,24 @@ def contract(points,graph,Qs,pq,i,j,c):
     for k in graph[i]:
         new_pq.append(edge_point(points,Qs,i,k))
     new_pq.sort()
-    pq = new_pq
+    return new_pq
 
-while pq:
+count = int(sys.argv[2]);
+while pq and count > 0:
     _,(i,j),c = pq.pop()
     if is_safe(graph,i,j):
-        contract(points,graph,Qs,pq,i,j,c)
+        pq = contract(points,graph,Qs,pq,i,j,c)
+        count -= 1
 
-print(graph)
+Tri = [(i,j,k) for i in range(len(graph)) if graph[i] for j in graph[i] if graph[j] and i<j for k in (graph[i] & graph[j]) if graph[k] and j<k]
+
+P = np.array(points)
+for i in range(len(graph)):
+    if graph[i] is None:
+        P[i,:] = np.array([0,0,0])
+
+fig = plt.figure()
+ax = fig.gca(projection='3d')
+
+ax.plot_trisurf(P[:,0],P[:,1],P[:,2],triangles=Tri)
+plt.show()

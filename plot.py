@@ -11,11 +11,11 @@ Tri = []
 with open(sys.argv[1]) as f:
     lines = f.read().splitlines()
     idx = lines.index('end_header') + 1
-    while len(lines[idx].split()) == 6:
-        x,y,z,_,_,_ = lines[idx].split()
-        X.append(float(x))
-        Y.append(float(y))
-        Z.append(float(z))
+    while len(lines[idx].split()) == 6 or len(lines[idx].split()) == 3:
+        line = lines[idx].split()
+        X.append(float(line[0]))
+        Y.append(float(line[1]))
+        Z.append(float(line[2]))
         idx += 1
     while idx < len(lines):
         _,a,b,c = map(int,lines[idx].split())
