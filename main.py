@@ -40,27 +40,21 @@ for (a,b,c) in triangles:
     graph[c].add(a)
     graph[c].add(b)
 
-def plane(points,a,b,c):
-    """ (a,b,c) je trikotnik
-        vrne njegovo ravnino
-    """
-    u = points[a]
-    v = points[b]
-    w = points[c]
-    n = np.cross(v-u,w-u)
+def plane(a,b,c):
+    n = np.cross(b-a,c-a)
     n = n / np.linalg.norm(n)
-    d = -n.dot(u)
+    d = -n.dot(a)
     return np.append(n,d)
 
-def triangle_quadric(points,a,b,c):
-    u = plane(points,a,b,c)
+def triangle_quadric(a,b,c):
+    u = plane(a,b,c)
     return np.outer(u,u)
 
 def point_quadric(points,graph,i):
     Q = np.zeros((4,4))
     for j,k in itertools.combinations(graph[i],2):
         if k in graph[j]:
-            Q += triangle_quadric(points,i,j,k)
+            Q += triangle_quadric(points[i],points[j],points[k])
     return Q
 
 Qs = [point_quadric(points,graph,i) for i in range(len(points))]
