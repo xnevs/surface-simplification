@@ -1,10 +1,14 @@
 import sys
 from collections import defaultdict
 import itertools
+from sortedcontainers import SortedDict
 
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
+
+def n(*args):
+    return tuple(sorted(args))
 
 points = []
 triangles = []
@@ -69,14 +73,30 @@ def edge_point(points,Qs,i,j):
     error = np.dot(np.dot(c,Q),c)
     return (-error,(i,j),c[:-1])
 
-pq = [edge_point(points,Qs,i,j) for i in range(len(points)) for j in graph[i] if i<j]
-pq.sort()
-
+real_error = dict()
+pq = SortedDict()
+for i in range(len(points)):
+    for j in graph[i]:
+        if i < j:
+            error,(i,j),c = edge_point(points,Qs,i,j)
+            real_error[n(i,j)] = error
+            pq[(error,n(i,j))] = c
 
 def is_safe(graph,a,b):
     return len(graph[a] & graph[b]) == 2
 
 def contract(points,graph,Qs,pq,i,j,c):
+    for k in graph[i]:
+        try:
+            pq.pop((real_error[n(i,k)],(n(i,k))))
+        except:
+            pass
+    for k in graph[j]:
+        try:
+            pq.pop((real_error[n(j,k)],(n(j,k))))
+        except:
+            pass
+    
     graph[i].remove(j)
     graph[i].update(graph[j] - {i})
     for k in graph[j]:
@@ -90,20 +110,17 @@ def contract(points,graph,Qs,pq,i,j,c):
     for k in graph[i]:
         Qs[k] = point_quadric(points,graph,k)
 
-    new_pq = []
-    for error,e,cc in pq:
-        if not (i in e or j in e):
-            new_pq.append((error,e,cc))
     for k in graph[i]:
-        new_pq.append(edge_point(points,Qs,i,k))
-    new_pq.sort()
-    return new_pq
+        error,(i,j),c = edge_point(points,Qs,i,k)
+        real_error[n(i,j)] = error;
+        pq[(error,n(i,j))] = c
+    
 
-count = int(sys.argv[2]);
+count = int(sys.argv[2])
 while pq and count > 0:
-    _,(i,j),c = pq.pop()
+    (error,(i,j)),c = pq.popitem()
     if is_safe(graph,i,j):
-        pq = contract(points,graph,Qs,pq,i,j,c)
+        contract(points,graph,Qs,pq,i,j,c)
         count -= 1
 
 Tri = [(i,j,k) for i in range(len(graph)) if graph[i] for j in graph[i] if graph[j] and i<j for k in (graph[i] & graph[j]) if graph[k] and j<k]
