@@ -9,9 +9,17 @@ import matplotlib.pyplot as plt
 points = []
 triangles = []
 with open(sys.argv[1]) as f:
-    num_points = int(next(itertools.islice(f,3,4)).split()[2])
-    num_triangles = int(next(itertools.islice(f,6,7)).split()[2])
-    next(itertools.islice(f,2,2),None)
+    line = next(f).split()
+    while line[0] != 'element':
+        line = next(f).split()
+    num_points = int(line[2])
+    line = next(f).split()
+    while line[0] != 'element':
+        line = next(f).split()
+    num_triangles = int(line[2])
+    line = next(f).split()
+    while line[0] != 'end_header':
+        line = next(f).split()
     for i in range(num_points):
         line = map(float,next(f).split())
         x = next(line)
@@ -21,6 +29,7 @@ with open(sys.argv[1]) as f:
     for i in range(num_triangles):
         _,a,b,c = map(int,next(f).split())
         triangles.append((a,b,c))
+
 
 graph = [set() for _ in points]
 for (a,b,c) in triangles:
@@ -100,7 +109,6 @@ count = int(sys.argv[2]);
 while pq and count > 0:
     _,(i,j),c = pq.pop()
     if is_safe(graph,i,j):
-        print('contract',i,j)
         pq = contract(points,graph,Qs,pq,i,j,c)
         count -= 1
 
