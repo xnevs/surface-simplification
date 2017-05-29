@@ -139,7 +139,7 @@ class Surface:
         try:
             c = np.linalg.solve(Q[:-1,:-1],-Q[:-1,-1])
         except np.linalg.LinAlgError:  # TODO
-            print("NOT OK")
+            print("NOT OK",file=sys.stderr)
             c = (self.points[i] + self.points[j]) / 2
         c = np.append(c,1)
         error = np.dot(np.dot(c,Q),c)
