@@ -89,9 +89,10 @@ for tri in newTriangles:
 newFileName = "".join([nameS,"_changed.",nameE])
 file_lines_head = ['element vertex '+str(len(old_index)),
                    'element face '+str(len(newTriangles)),
-                   'end_header']
+                   'end_header \n']
 
 with open(newFileName,"w") as f:
     f.write("\n".join(file_lines_head))
     f.write("\n".join(file_lines))
+    f.write("\n")
     

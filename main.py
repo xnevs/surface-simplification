@@ -22,10 +22,12 @@ with open(fileName) as f:
     while line[0] != 'element':
         line = next(f).split()
     num_points = int(line[2])
+    print(num_points)
     line = next(f).split()
     while line[0] != 'element':
         line = next(f).split()
     num_triangles = int(line[2])
+    print(num_triangles)
     line = next(f).split()
     while line[0] != 'end_header':
         line = next(f).split()
