@@ -6,33 +6,19 @@ import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 
-try:
-    fileName = sys.argv[1]
-except:
-    print("Sample input for file name:")
-    print("examples/cow.ply")
-    fileName = input("Input file name: ").strip()
-
 points = []
 triangles = []
-with open(fileName) as f:
-    line = next(f).split()
-    while line[0] != 'element':
-        line = next(f).split()
-    num_points = int(line[2])
-    line = next(f).split()
-    while line[0] != 'element':
-        line = next(f).split()
-    num_triangles = int(line[2])
-    line = next(f).split()
-    while line[0] != 'end_header':
-        line = next(f).split()
+file = sys.argv[1]
+with open(file) as f:
+    num_points = int(next(itertools.islice(f,3,4)).split()[2])
+    num_triangles = int(next(itertools.islice(f,6,7)).split()[2])
+    next(itertools.islice(f,2,2),None)
     for i in range(num_points):
         line = map(lambda x : x[:5],next(f).split())
         x = next(line)
         y = next(line)
         z = next(line)
-        points.append((x,y,z))
+        points.append( (x,y,z) )
     for i in range(num_triangles):
         _,a,b,c = map(int,next(f).split())
         triangles.append((a,b,c))
@@ -67,32 +53,34 @@ old_index = sorted(set(points_index))
 new_index = [z for z in range(len(old_index))]
 change_index = dict([(old_index[i],i) for i in new_index])
 
-newTriangles = [tuple(map(lambda x: change_index[unique_index[x]], tri))
-                for tri in triangles]
-
-print("Trikotniki")
-print(len(triangles))
-print(len(newTriangles))
-print("Tocke")
-print(len(points))
 print(len(old_index))
 file_lines = list()
+
+newTriangles = [tuple(map(lambda x: change_index[unique_index[x]], tri)) for tri in triangles]
+
+s = """ply
+format ascii 1.0
+element vertex """+ str(len(old_index))+""" 
+property float32 x
+property float32 y
+property float32 z
+element face """ + str(len(newTriangles)) + """ 
+property list uint8 int32 vertex_indices
+end_header"""
+file_lines.append(s)
+
+
+
 for z in old_index:
     s = " ".join(list(unique_points_rep_rev[z]))
     file_lines.append(s)
 
+
+
 for tri in newTriangles:
-    s = "3 " + " ".join(map(str,tri))
+    s = "3 "+ str(tri[0]) + " " + str(tri[1]) + " " +str(tri[2])
     file_lines.append(s)
-
-[nameS,nameE] = fileName.split(".")
-newFileName = "".join([nameS,"_changed.",nameE])
-file_lines_head = ['element vertex '+str(len(old_index)),
-                   'element face '+str(len(newTriangles)),
-                   'end_header \n']
-
-with open(newFileName,"w") as f:
-    f.write("\n".join(file_lines_head))
+print(len(newTriangles))
+with open(file+"_changed.ply",'w') as f:
     f.write("\n".join(file_lines))
-    f.write("\n")
     

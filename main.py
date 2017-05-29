@@ -7,12 +7,22 @@ import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 
+
+try:
+    filename = sys.argv[1]
+    count = int(sys.argv[2])
+except:
+    print("Sample input for file name:")
+    print("examples/cow.ply")
+    fileName = input("Input file name: ").strip()
+    count = int(input("Input contract length: ").strip())
+
 def n(*args):
     return tuple(sorted(args))
 
 points = []
 triangles = []
-with open(sys.argv[1]) as f:
+with open(filename) as f:
     line = next(f).split()
     while line[0] != 'element':
         line = next(f).split()
@@ -67,7 +77,9 @@ def edge_point(points,Qs,i,j):
     Q = Qs[i] + Qs[j]
     try:
         c = np.linalg.solve(Q[:-1,:-1],-Q[:-1,-1])
+        ##print("OK")
     except np.linalg.LinAlgError:  # TODO
+        print("NOT OK")
         c = (points[i] + points[j]) / 2
     c = np.append(c,1)
     error = np.dot(np.dot(c,Q),c)
@@ -116,7 +128,6 @@ def contract(points,graph,Qs,pq,i,j,c):
         pq[(error,n(i,j))] = c
     
 
-count = int(sys.argv[2])
 while pq and count > 0:
     (error,(i,j)),c = pq.popitem()
     if is_safe(graph,i,j):
