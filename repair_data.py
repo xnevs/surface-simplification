@@ -27,7 +27,7 @@ triangles.append((a,b,c))
 
 unique_points = dict()
 
-for i in range(points):
+for i in range(len(points)):
     p = points[i]
     if p in unique_points:
         unique_points[p].append(i)
@@ -64,7 +64,7 @@ for z in old_index:
 newTriangles = [tuple(map(lambda x: change_index[unique_index[x]], tri))
                 for tri in triangels]
 for tri in newTriangles:
-    s = " ".join(tri))
+    s = " ".join(tri)
     file_lines.append(s)
 
 with open("change_"+file) as f:
