@@ -1,0 +1,22 @@
+Poglej to prizmo.
+Prvotna je ok. Ko pa naredimo 70 simplifikacij, 
+pa pride do samopresecisca in se topoloska
+struktura popolnoma pokvari.
+
+Trenutno je to izracunano z naso funkcijo napake, 
+ki je v vsakem koraku tocna.
+Ne gleda na prvotno ampak izracuna na novo v vsakem koraku.
+Je pa to dokaz, da tudi algoritem iz knjige ni ok.
+Zakaj:
+Obstaja nek indeks i pri nas, pri katerem je simplifikacija 
+dobra in simplifikacija za i+1 ni dobra.
+
+Ce v algoritmu iz knjige vzamemo objekt iz i potem bo 
+siplifikacija napacna, saj zacetni korak algoritma vsi naredimo enako.
+Obrazlozitev:
+Vsak nas korak je enak prvemu koraku iz knjige (in clanka).
+
+
+To je dokaz da algoritem iz knjige ne deluje.
+V clanku pa jasno povejo, da njih ohranjanje topoloske 
+strukture sploh ne zanima zato clanek se vedno ok.
