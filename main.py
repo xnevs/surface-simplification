@@ -10,6 +10,9 @@ class EdgePriorityQueue:
         self.tree = SortedDict()
         self.errors = dict()
 
+    def __bool__(self):
+        return bool(self.tree)
+
     def push(self,error,e,c):
         if e[1] < e[0]:
             e = (e[1],e[0])
@@ -68,7 +71,7 @@ class Surface:
         self.graph = [set() for _ in range(num_points)]
         self.Qs = [np.zeros((4,4)) for _ in range(num_points)]
         for _ in range(num_triangles):
-            _,i,j,k = map(int,next(f).split())
+            i,j,k = sorted(map(int,next(f).split()[1:]))
             self.graph[i].update([j,k])
             self.graph[j].update([i,k])
             self.graph[k].update([i,j])
@@ -76,7 +79,7 @@ class Surface:
             self.Qs[i] += Q
             self.Qs[j] += Q
             self.Qs[k] += Q
-
+     
     def ply(self):
         points,triangles = self.points_and_triangles()
         lines = []
@@ -96,8 +99,11 @@ class Surface:
         return '\n'.join(lines)
 
     def from_points_and_triangles(self,points,triangles):
-        self.n = len(points)
-        self.points = points.copy()
+        self.points = []
+        for point in points:
+            self.points.append(point)
+        self.n = len(self.points)
+
         self.graph = [set() for _ in points]
         self.Qs = [np.zeros((4,4)) for _ in points]
         for (i,j,k) in triangles:
@@ -160,9 +166,12 @@ class Surface:
         self.graph[i].remove(i) # i was added once before the for loop and once in it
         self.graph[j] = None
 
-        self.Qs[i] = self.point_quadric(i)
-        for k in self.graph[i]:
-            self.Qs[k] = self.point_quadric(k)
+        if msmQ:
+            self.Qs[i] = self.point_quadric(i)
+            for k in self.graph[i]:
+                self.Qs[k] = self.point_quadric(k)
+        else:
+            self.Qs[i] = self.Qs[i] + self.Qs[j]
         self.Qs[j] = None
 
 def contract(surface,pq,i,j,c):
@@ -180,6 +189,7 @@ if __name__ == '__main__':
     try:
         filename = sys.argv[1]
         count = int(sys.argv[2])
+        msmQ = bool(int(sys.argv[3]))
     except:
         print("Sample input for file name:")
         print("examples/cow.ply")
