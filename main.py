@@ -90,18 +90,21 @@ class Surface:
             self.points.append(point)
         self.n = len(self.points)
 
-        self.graph = [set() for _ in range(self.n)]
+        self.graph = [defaultdict(lambda: np.zeros((4,4))) for _ in range(self.n)]
         self.Qs = [np.zeros((4,4)) for _ in range(self.n)]
 
     def init_triangles(self,triangles):
         for (i,j,k) in triangles:
-            self.graph[i].update([j,k])
-            self.graph[j].update([i,k])
-            self.graph[k].update([i,j])
             Q = triangle_quadric(self.points[i],self.points[j],self.points[k])
             self.Qs[i] += Q
             self.Qs[j] += Q
             self.Qs[k] += Q
+            self.graph[i][j] += Q
+            self.graph[i][k] += Q
+            self.graph[j][i] += Q
+            self.graph[j][k] += Q
+            self.graph[k][i] += Q
+            self.graph[k][j] += Q
 
     def from_points_and_triangles(self,points,triangles):
         self.init_points(points)
@@ -119,16 +122,16 @@ class Surface:
         triangles = [(idxs[i],idxs[j],idxs[k])
                         for i in idxs.keys()
                             if self.graph[i]
-                                for j in self.graph[i]
+                                for j in self.graph[i].keys()
                                     if i < j
-                                        for k in (self.graph[i] & self.graph[j])
+                                        for k in (self.graph[i].keys() & self.graph[j].keys())
                                             if j < k]
         return points,triangles
 
     def point_quadric(self,i):
         Q = np.zeros((4,4))
-        for j in self.graph[i]:
-            for k in (self.graph[i] & self.graph[j]):
+        for j in self.graph[i].keys():
+            for k in (self.graph[i].keys() & self.graph[j].keys()):
                 Q += triangle_quadric(self.points[i],self.points[j],self.points[k])
         return Q
 
@@ -144,18 +147,19 @@ class Surface:
         return (-error,c[:-1])
 
     def is_safe(self,i,j):
-        return len(self.graph[i] & self.graph[j]) == 2
+        return len(self.graph[i].keys() & self.graph[j].keys()) == 2
 
     def contract(self,i,j,c):
         self.points[i] = c
         self.points[j] = None
+
+        Qe = self.graph[i][j] # needed for: Q_c = Q_a + Q_b - Q_{ab} below
         
-        self.graph[i].remove(j)
         self.graph[i].update(self.graph[j])
         for k in self.graph[j]:
-            self.graph[k].discard(j)
-            self.graph[k].add(i)
-        self.graph[i].remove(i) # i was added once before the for loop and once in it
+            Qe = self.graph[k].pop(j)
+            self.graph[k][i] = Qe
+        self.graph[i].pop(i) # i was added once before the for loop and once in it
         self.graph[j] = None
 
         if msmQ:
@@ -163,7 +167,7 @@ class Surface:
             for k in self.graph[i]:
                 self.Qs[k] = self.point_quadric(k)
         else:
-            self.Qs[i] = self.Qs[i] + self.Qs[j]
+            self.Qs[i] = self.Qs[i] + self.Qs[j] - Qe
         self.Qs[j] = None
 
 def contract(surface,pq,i,j,c):
