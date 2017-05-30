@@ -150,15 +150,22 @@ class Surface:
         return len(self.graph[i].keys() & self.graph[j].keys()) == 2
 
     def contract(self,i,j,c):
+        a = self.points[i]
+        b = self.points[j]
+
         self.points[i] = c
         self.points[j] = None
 
-        Qe = self.graph[i][j] # needed for: Q_c = Q_a + Q_b - Q_{ab} below
+        Qab = self.graph[i][j] # needed for: Q_c = Q_a + Q_b - Q_{ab} below
+
+        for k in self.graph[i].keys() & self.graph[j].keys():
+            self.graph[i][k] -= triangle_quadric(a,b,self.points[k])
+            self.graph[k][i] -= triangle_quadric(a,b,self.points[k])
         
-        self.graph[i].update(self.graph[j])
         for k in self.graph[j]:
             Qe = self.graph[k].pop(j)
-            self.graph[k][i] = Qe
+            self.graph[i][k] += Qe # + only for x and y (because of the link condition others are zero)
+            self.graph[k][i] += Qe # + only for x and y (because of the link condition others are zero)
         self.graph[i].pop(i) # i was added once before the for loop and once in it
         self.graph[j] = None
 
@@ -167,7 +174,7 @@ class Surface:
             for k in self.graph[i]:
                 self.Qs[k] = self.point_quadric(k)
         else:
-            self.Qs[i] = self.Qs[i] + self.Qs[j] - Qe
+            self.Qs[i] = self.Qs[i] + self.Qs[j] - Qab
         self.Qs[j] = None
 
 def contract(surface,pq,i,j,c):
