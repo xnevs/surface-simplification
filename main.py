@@ -60,25 +60,11 @@ class Surface:
         while line[0] != 'end_header':
             line = next(f).split()
 
-        self.points = []
-        for _ in range(num_points):
-            line = map(float,next(f).split())
-            x = next(line)
-            y = next(line)
-            z = next(line)
-            self.points.append( np.array((x,y,z)) )
+        points = (np.array(list(map(float,line.split()[:3]))) for line in itertools.islice(f,num_points))
+        self.init_points(points)
 
-        self.graph = [set() for _ in range(num_points)]
-        self.Qs = [np.zeros((4,4)) for _ in range(num_points)]
-        for _ in range(num_triangles):
-            i,j,k = sorted(map(int,next(f).split()[1:]))
-            self.graph[i].update([j,k])
-            self.graph[j].update([i,k])
-            self.graph[k].update([i,j])
-            Q = triangle_quadric(self.points[i],self.points[j],self.points[k])
-            self.Qs[i] += Q
-            self.Qs[j] += Q
-            self.Qs[k] += Q
+        triangles = (tuple(map(int,line.split()[1:4])) for line in itertools.islice(f,num_triangles))
+        self.init_triangles(triangles)
      
     def ply(self):
         points,triangles = self.points_and_triangles()
@@ -98,14 +84,16 @@ class Surface:
             lines.append('3 ' + ' '.join(map(str,t)))
         return '\n'.join(lines)
 
-    def from_points_and_triangles(self,points,triangles):
+    def init_points(self,points):
         self.points = []
         for point in points:
             self.points.append(point)
         self.n = len(self.points)
 
-        self.graph = [set() for _ in points]
-        self.Qs = [np.zeros((4,4)) for _ in points]
+        self.graph = [set() for _ in range(self.n)]
+        self.Qs = [np.zeros((4,4)) for _ in range(self.n)]
+
+    def init_triangles(self,triangles):
         for (i,j,k) in triangles:
             self.graph[i].update([j,k])
             self.graph[j].update([i,k])
@@ -114,6 +102,10 @@ class Surface:
             self.Qs[i] += Q
             self.Qs[j] += Q
             self.Qs[k] += Q
+
+    def from_points_and_triangles(self,points,triangles):
+        self.init_points(points)
+        self.init_triangles(triangles)
 
     def points_and_triangles(self):
         points = []
