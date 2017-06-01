@@ -13,6 +13,9 @@ class EdgePriorityQueue:
     def __bool__(self):
         return bool(self.tree)
 
+    def len(self):
+        return len(self.tree)
+
     def push(self,error,e,c):
         if e[1] < e[0]:
             e = (e[1],e[0])
@@ -54,7 +57,7 @@ class Surface:
         line = next(f).split()
         while line[0] != 'element':
             line = next(f).split()
-        num_triangles = int(line[2])
+        self.num_triangles = int(line[2])
 
         line = next(f).split()
         while line[0] != 'end_header':
@@ -63,7 +66,7 @@ class Surface:
         points = (np.array(list(map(float,line.split()[:3]))) for line in itertools.islice(f,num_points))
         self.init_points(points)
 
-        triangles = (tuple(map(int,line.split()[1:4])) for line in itertools.islice(f,num_triangles))
+        triangles = (tuple(map(int,line.split()[1:4])) for line in itertools.islice(f,self.num_triangles))
         self.init_triangles(triangles)
      
     def ply(self):
@@ -209,11 +212,14 @@ if __name__ == '__main__':
             if i < j:
                 error,c = surface.edge_point(i,j)
                 pq.push(error,(i,j),c)
-        
-    while pq and count > 0:
+    
+    count = surface.num_triangles - count
+    while count>0 and pq:
         (i,j),c = pq.pop()
         if surface.is_safe(i,j):
             contract(surface,pq,i,j,c)
-            count -= 1
+            count -= 2
+
+
 
     print(surface.ply())
