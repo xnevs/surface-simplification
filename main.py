@@ -13,7 +13,7 @@ class EdgePriorityQueue:
     def __bool__(self):
         return bool(self.tree)
 
-    def len(self):
+    def __len__(self):
         return len(self.tree)
 
     def push(self,error,e,c):
@@ -195,12 +195,16 @@ if __name__ == '__main__':
     try:
         filename = sys.argv[1]
         count = int(sys.argv[2])
-        msmQ = bool(int(sys.argv[3]))
+        if len(sys.argv) > 3:
+            msmQ = bool(int(sys.argv[3]))
+        else:
+            msmQ = False
     except:
         print("Sample input for file name:")
         print("examples/cow.ply")
         filename = input("Input file name: ").strip()
         count = int(input("Input contract length: ").strip())
+        msmQ = False
 
     surface = Surface()
     with open(filename) as f:
@@ -219,7 +223,5 @@ if __name__ == '__main__':
         if surface.is_safe(i,j):
             contract(surface,pq,i,j,c)
             count -= 2
-
-
 
     print(surface.ply())
