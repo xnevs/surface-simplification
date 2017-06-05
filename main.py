@@ -150,7 +150,7 @@ class Surface:
         return (-error,c[:-1])
 
     def is_safe(self,i,j):
-        return len(self.graph[i].keys() & self.graph[j].keys()) == 2
+        return len(self.graph[i].keys() & self.graph[j].keys()) <= 2
 
     def contract(self,i,j,c):
         a = self.points[i]
@@ -161,9 +161,11 @@ class Surface:
 
         Qab = self.graph[i][j] # needed for: Q_c = Q_a + Q_b - Q_{ab} below
 
+        count = 0
         for k in self.graph[i].keys() & self.graph[j].keys():
             self.graph[i][k] -= triangle_quadric(a,b,self.points[k])
             self.graph[k][i] -= triangle_quadric(a,b,self.points[k])
+            count += 1
         
         for k in self.graph[j]:
             Qe = self.graph[k].pop(j)
@@ -179,16 +181,18 @@ class Surface:
         else:
             self.Qs[i] = self.Qs[i] + self.Qs[j] - Qab
         self.Qs[j] = None
+        return count
 
 def contract(surface,pq,i,j,c):
     for k in surface.graph[i]:
         pq.discard((i,k))
     for k in surface.graph[j]:
         pq.discard((j,k))
-    surface.contract(i,j,c)
+    count = surface.contract(i,j,c)
     for k in surface.graph[i]:
         error,c = surface.edge_point(i,k)
         pq.push(error,(i,k),c)
+    return count
         
 
 if __name__ == '__main__':
@@ -221,7 +225,6 @@ if __name__ == '__main__':
     while count>0 and pq:
         (i,j),c = pq.pop()
         if surface.is_safe(i,j):
-            contract(surface,pq,i,j,c)
-            count -= 2
+            count -= contract(surface,pq,i,j,c)
 
     print(surface.ply())

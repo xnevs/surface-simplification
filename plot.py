@@ -22,9 +22,6 @@ with open(sys.argv[1]) as f:
         Tri.append((a,b,c))
         idx += 1
 
-print('X:', len(X))
-print('Tri:', len(Tri))
-
 X = np.array(X)
 Y = np.array(Y)
 Z = np.array(Z)
