@@ -33,4 +33,7 @@ fig = plt.figure()
 ax = fig.gca(projection='3d')
 
 ax.plot_trisurf(X,Y,Z,triangles=Tri)
+
+plt.axis('off')
 plt.show()
+#fig.savefig('test.pdf')
