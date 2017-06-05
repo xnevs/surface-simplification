@@ -47,6 +47,9 @@ def triangle_quadric(a,b,c):
     return np.outer(u,u)
 
 class Surface:
+    def __init__(self):
+        self.transform = dict()
+        
     def from_ply(self,f):
         line = next(f).split()
         while line[0] != 'element':
@@ -95,8 +98,11 @@ class Surface:
 
         self.graph = [defaultdict(lambda: np.zeros((4,4))) for _ in range(self.n)]
         self.Qs = [np.zeros((4,4)) for _ in range(self.n)]
+        self.transform = dict([(i,i) for i in range(len(self.points))])
 
     def init_triangles(self,triangles):
+        triangles = list(triangles)
+        self.begin_triangles = triangles
         for (i,j,k) in triangles:
             Q = triangle_quadric(self.points[i],self.points[j],self.points[k])
             self.Qs[i] += Q
@@ -122,13 +128,27 @@ class Surface:
                 points.append(self.points[i])
                 idxs[i] = count
                 count += 1
-        triangles = [(idxs[i],idxs[j],idxs[k])
+                
+        trianglesB = [tuple(sorted((i,j,k)))
                         for i in idxs.keys()
                             if self.graph[i]
                                 for j in self.graph[i].keys()
                                     if i < j
                                         for k in (self.graph[i].keys() & self.graph[j].keys())
                                             if j < k]
+
+
+        for i in range(len(self.points)):
+            while self.transform[self.transform[i]] != self.transform[i]:
+                self.transform[i] = self.transform[self.transform[i]]
+        
+        trianglesA = list()
+        for tri in self.begin_triangles:
+            trianglesA.append(tuple(sorted(map(lambda x: self.transform[self.transform[x]],tri))))
+
+        triangles = set(trianglesB).intersection(set(trianglesA))
+        triangles = sorted([tuple(map(lambda x: idxs[x],tri)) for tri in triangles])
+        
         return points,triangles
 
     def point_quadric(self,i):
@@ -153,6 +173,7 @@ class Surface:
         return len(self.graph[i].keys() & self.graph[j].keys()) <= 2
 
     def contract(self,i,j,c):
+        self.transform[j] = i
         a = self.points[i]
         b = self.points[j]
 
