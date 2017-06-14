@@ -226,7 +226,8 @@ class Surface:
         self.points[j] = None
 
         # store the quadric of the contracted edge
-        Qab = self.graph[i][j] # needed for: Q_c = Q_a + Q_b - Q_{ab} below
+        # needed for: Q_c = Q_a + Q_b - Q_{ab} below
+        Qab = self.graph[i][j]
 
         # subtract the quadrics of the triangles incident
         # to the edge (i,j)
