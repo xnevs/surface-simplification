@@ -9,6 +9,10 @@ The edge to be contracted is chosen based on an error measure that quantifies th
 
 [1] Edelsbrunner, Herbert, and John Harer. Computational topology: an introduction. American Mathematical Soc., 2010.
 
+## Dependencies
+
+NumPy and SortedContainers Python packages are required for `main.py`. Additionally, Matplotlib is required for `plot.py`.
+
 ## Running
 
 The main simplification algorithm is implemented in `main.py'.
