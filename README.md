@@ -11,7 +11,9 @@ The edge to be contracted is chosen based on an error measure that quantifies th
 
 ## Dependencies
 
-NumPy and SortedContainers Python packages are required for `main.py`. Additionally, Matplotlib is required for `plot.py`.
+NumPy and SortedContainers Python packages are required for `main.py`.
+
+Additionally, Matplotlib is required for `plot.py`.
 
 ## Running
 
