@@ -35,8 +35,8 @@ class EdgePriorityQueue:
         """Add an edge with the given error and new point (c)
         to the priority queue.
         """
-        # always store the vertices of an edge
-        # in sorted order
+        # always store the vertices of an edge in sorted order
+        # to avoid storing the same edge twice (as (i,j) and (j,i))
         if e[1] < e[0]:
             e = (e[1],e[0])
         self.errors[e] = error
@@ -203,15 +203,16 @@ class Surface:
         Q = self.Qs[i] + self.Qs[j]
         try:
             c = np.linalg.solve(Q[:-1,:-1],-Q[:-1,-1])
-        except np.linalg.LinAlgError:  # TODO
-            #print("NOT OK",file=sys.stderr)
+        except np.linalg.LinAlgError:
             c = (self.points[i] + self.points[j]) / 2
         c = np.append(c,1)
         error = np.dot(np.dot(c,Q),c)
+        # return -error because the edges are
+        # to be stored in a max priority queue
         return (-error,c[:-1])
 
     def is_safe(self,i,j):
-        """Return True iff the link condition holds for (i,j)."""
+        """Return True if the link condition holds for (i,j)."""
         return len(self.graph[i].keys() & self.graph[j].keys()) <= 2
 
     def contract(self,i,j,c):
@@ -247,11 +248,11 @@ class Surface:
         self.graph[j] = None
 
         # calculate the new quadric
-        if msmQ:
+        if msmQ: # use method 3 for the error measure
             self.Qs[i] = self.point_quadric(i)
             for k in self.graph[i]:
                 self.Qs[k] = self.point_quadric(k)
-        else:
+        else: # use method 4 for the error measure
             self.Qs[i] = self.Qs[i] + self.Qs[j] - Qab
         # invalidate j
         self.Qs[j] = None
@@ -306,7 +307,10 @@ if __name__ == '__main__':
 
     # calculate the number of triangles we must eliminate
     count = surface.num_triangles - count
-    # do contractions while required and possible
+
+    # keep contracting the edges until the desired
+    # number of triangles is reached or no further
+    # contractions are possible
     while count>0 and pq:
         # pick the edge with the minimal error
         (i,j),c = pq.pop()
