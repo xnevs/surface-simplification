@@ -15,12 +15,12 @@ class EdgePriorityQueue:
 
     def __init__(self):
         """Initialize the priority queue."""
-        #self.tree is used to store the edges in sorted
-        #order according to the error.
+        # self.tree is used to store the edges in sorted
+        # order according to the error.
         self.tree = SortedDict()
-        #self.errors represents a mapping (edge --> error)
-        #that enables us to find a given edge in self.tree.
-        #(required for discard)
+        # self.errors represents a mapping (edge --> error)
+        # that enables us to find a given edge in self.tree.
+        # (required for discard)
         self.errors = dict()
 
     def __bool__(self):
@@ -314,5 +314,5 @@ if __name__ == '__main__':
             # and contract it
             count -= contract(surface,pq,i,j,c)
 
-    #output the result in ply format to stdout
+    # output the result in ply format to stdout
     print(surface.ply())
