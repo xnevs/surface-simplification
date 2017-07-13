@@ -9,6 +9,8 @@ The edge to be contracted is chosen based on an error measure that quantifies th
 
 [1] Edelsbrunner, Herbert, and John Harer. Computational topology: an introduction. American Mathematical Soc., 2010.
 
+![cow](https://raw.githubusercontent.com/xnevs/surface-simplification/master/cow.png)
+
 ## Dependencies
 
 NumPy and SortedContainers Python packages are required for `main.py`.
